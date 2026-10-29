@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>La Brosserie — variantes d'une même inspiration</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">
+<style>
+  html, body {
+    margin: 0; padding: 0; height: 100%; overflow: hidden;
+    background: #f4efe4;
+    background-image: radial-gradient(ellipse at center, #faf6ec 0%, #e9e2d0 100%);
+    cursor: crosshair;
+    font-family: 'Special Elite', 'Courier New', monospace;
+    -webkit-user-select: none; user-select: none;
+  }
+  #stage { position: fixed; inset: 0; }
+  .letter {
+    position: absolute;
+    color: #2b2620;
+    text-shadow: 0 0 0.5px rgba(43,38,32,.4);
+    will-change: transform, opacity;
+    pointer-events: none;
+    white-space: pre;
+  }
+  #hud {
+    position: fixed; left: 0; right: 0; bottom: 14px;
+    text-align: center;
+    font-size: 13px; letter-spacing: 1px;
+    color: rgba(43,38,32,.55);
+    pointer-events: none;
+  }
+  #badge {
+    position: fixed; top: 18px; right: 22px;
+    font-size: 14px; color: rgba(43,38,32,.6);
+    pointer-events: none;
+  }
+  #paused {
+    position: fixed; top: 18px; left: 22px;
+    font-size: 14px; color: #8a2f22;
+    opacity: 0; transition: opacity .3s;
+    pointer-events: none;
+  }
+  #paused.on { opacity: 1; }
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<div id="badge"></div>
+<div id="paused">— FIGÉ —</div>
+<div id="hud">bougez la souris : le souffle emporte les lettres &nbsp;·&nbsp; cliquez : une autre variante &nbsp;·&nbsp; espace : figer / relancer</div>
+
+<script>
+"use strict";
+
+const TEXTES = [
+`Temple de la caducité ! L'hiver, rongées de lichens, les basses branches sont déchues. Et point d'encombre à mi-hauteur, point de serpentements de lianes, ni de cordes. L'on évolue à l'aise entre ces mâts séniles dont les tignasses ne s'entremêlent qu'aux ciel.
+En août, c'est, tout entourée de miroirs, une halle aux épingles à cheveux odoriférantes (soulevées parfois après quelque pluie par la curiosité maladive et prudente des champignons) – une brosserie aux longs manches ciselés, aux poils verts, pour la flamboyante créature qui sort de la baignoire marine ou lacustre fumante au bas-côté.`,
+`Alpestre brush-maker's surrounded by mirrors
+With handles of purple wood, tall tufts of green bristles
+In your warm half-dark stained with sunlight
+Came to comb herself Venus emerging from the bathtub
+Or marine or lakeside, steaming at the roadside…
+Hence the thickness on the elastic and vermilion ground
+Of fragrant hairpins
+Shaken there by so many careless treetops
+… Floats an oblique scarf of sleepless fabric.`,
+`The alpine brush-maker's – surrounded by mirrors –
+With handles of purple wood, tall tufts of green bristles…
+On the thickness on the elastic and vermilion ground
+Of fragrant hairpins
+Shaken there by so many careless treetops,
+In the warm half-dark stained with sunlight
+Dries at once the cloud emerging from the bathtub
+Or marine or lakeside, steaming at the roadside
+Beneath these stretched ribbons of sleepless fabric.`,
+`The tall brush-maker's surrounded by mirrors
+With handles of purple wood, with tufts of green bristles.
+In her dressing gown, half-dark stained with sunlight,
+Dries at once Venus emerging from the bathtub
+Or marine or lakeside, steaming at the roadside
+On the thickness on the elastic and vermilion ground
+Of fragrant hairpins
+Shaken there by so many careless heads…
+Floats the oblique scarf of sleepless fabric.`,
+`The alpine brush-maker's, tall with green bristles
+With handles of purple wood surrounded by mirrors…
+In her warm half-dark stained with sunlight
+Came to comb herself Venus emerging from the bathtub
+Or marine or lakeside, steaming at the roadside.
+Hence the thickness on the elastic and vermilion ground
+Of fragrant hairpins
+Shaken there by so many careless treetops,
+And these stretched ribbons of sleepless fabric.`,
+`The tall brush-maker's, surrounded by mirrors,
+With handles of purple wood, tall tufts of green bristles…
+In these dressing gowns made of shadow stained with sunlight,
+Dry, vaporous bodies emerged from the bathtub
+Or marine or lakeside, steaming at the roadside,
+On the thickness on the elastic and vermilion ground
+Of fragrant hairpins
+Shaken there by so many careless treetops
+And amid these ribbons of sleepless fabric.`,
+`The tall brush-maker's surrounded by mirrors
+With handles of purple wood, tall tufts of green bristles…
+In a dressing gown made of shadow stained with sunlight
+Venus came to comb herself, emerging from the bathtub
+Or marine or lakeside, steaming at the roadside…
+Hence the thickness on the elastic and vermilion ground
+Of fragrant hairpins
+Shaken there by so many careless treetops,
+And these ribbons, fabrics of atoms without sleep.`,
+`The tall brush-maker's, tall with green bristles
+With carved handles surrounded by mirrors…
+Did Venus comb herself there, emerged from the bathtub
+Or marine or lakeside, steaming at the roadside?
+Remains, on the elastic and vermilion carpet
+Of fragrant hairpins
+Shaken there by so many careless treetops,
+A dressing gown of half-dark stained with sunlight,
+Obliquely fabric of atoms without sleep.`,
+`The ancient brush-maker's, tall with green bristles,
+With carved handles surrounded by mirrors…
+In a dressing gown made of shadow stained with sunlight,
+Venus vanishes there, emerged from the bathtub
+Or marine or lakeside, steaming at the roadside.
+Nothing remains, on the elastic and vermilion carpet
+Of fragrant hairpins
+Shaken there by so many careless treetops,
+But ribbons, fabrics of atoms without sleep.`,
+`A whole brush-maker's, tall with green bristles
+With handles of purple wood surrounded by mirrors
+Makes a form vanish, emerged from the bathtub
+Or marine or lakeside, steaming at the roadside
+Leaving on the elastic and vermilion carpet
+Of fragrant hairpins
+Shaken there by so many careless treetops
+Only a dressing gown of half-dark stained with sunlight
+Obliquely fabric of atoms without sleep.`,
+`The alpine brush-maker's, tall with green bristles
+With handles of purple wood surrounded by mirrors:
+Did Venus comb herself there, emerged from the bathtub
+Or marine or lakeside, steaming at the roadside?
+— There remains a dressing gown of shadow stained with sunlight
+On the thickness on the elastic and vermilion ground
+Of fragrant hairpins
+Shaken there by so many careless treetops,
+And ribbons, fabrics of atoms without sleep.`,
+`The alpine brush-maker's, tall with green bristles
+With handles of purple wood surrounded by mirrors.
+Of the sparkling body emerged from the bathtub
+Or marine or lakeside, steaming at the roadside,
+On the thickness on the elastic and vermilion ground
+Of fragrant hairpins
+Shaken there by so many careless treetops,
+There remains a dressing gown of shadow stained with sunlight
+Obliquely fabric of atoms without sleep.`,
+`In this brush-maker's, tall with green bristles
+With handles of purple wood surrounded by mirrors,
+Of you, radiant body emerged from the bathtub
+Or marine or lakeside, steaming at the roadside,
+Nothing remains on the elastic and vermilion carpet
+Of fragrant hairpins
+Shaken there by so many careless treetops,
+But a dressing gown of half-dark stained with sunlight
+Obliquely fabric of atoms without sleep.`,
+`The alpine brush-maker's with tufts of green bristles,
+With handles of purple wood surrounded by mirrors
+Let Phoebus present himself there, emerged from the bathtub
+Or marine or lakeside, steaming at the roadside,
+Nothing remains of it – on the elastic and vermilion carpet
+Of fragrant hairpins
+Shaken there by so many careless treetops –
+But a dressing gown of half-dark stained with sunlight
+Constantly crossed by sleepless flies.`,
+`Through this brush-maker's with tufts of green bristles,
+With carved handles surrounded by mirrors,
+Of the divine blaze emerged from the bathtub
+Or marine or lakeside, steaming at the roadside
+On the thickness on the elastic and vermilion ground
+Of fragrant hairpins
+Shaken there by so many careless treetops
+Nothing remains but half-dark stained with sunlight
+And ribbons, fabrics of atoms without sleep.`,
+`In a brush-maker's, tall with green bristles
+With handles of purple wood surrounded by mirrors
+A radiant body enters, emerged from the bathtub
+Or marine or lakeside, steaming at the roadside
+Of it there remains only fabric of sleepless flies
+On the thickness on the elastic and vermilion ground
+Of fragrant hairpins
+Shaken there by so many careless treetops
+But a dressing gown of half-dark stained with sunlight.`,
+`Through this brush-maker's, tall with green bristles
+With handles of purple wood surrounded by mirrors
+A radiant body enters, emerged from the bathtub
+Or marine or lakeside, steaming at the roadside
+Nothing of it remains in the report of sleepless flies
+On the thickness on the elastic and vermilion ground
+Of fragrant hairpins
+Shaken there by so many careless treetops
+But a dressing gown of half-dark stained with sunlight.`
+];
+
+const stage = document.getElementById('stage');
+const badge = document.getElementById('badge');
+const pausedEl = document.getElementById('paused');
+
+const FONT_SIZE = 22;
+const FONT = `${FONT_SIZE}px 'Special Elite', 'Courier New', monospace`;
+
+let letters = [];
+let current = -1;
+let frozen = false;
+let W = innerWidth, H = innerHeight;
+
+const mouse = { x: W / 2, y: H / 2, vx: 0, vy: 0, speed: 0 };
+
+/* ---------- audio : machine à écrire synthétisée ---------- */
+let AC = null, master = null, noiseBuf = null;
+let clackTimes = [];
+
+function initAudio() {
+  if (AC) return;
+  AC = new (window.AudioContext || window.webkitAudioContext)();
+  master = AC.createGain();
+  master.gain.value = 0.5;
+  master.connect(AC.destination);
+  const len = AC.sampleRate * 0.1;
+  noiseBuf = AC.createBuffer(1, len, AC.sampleRate);
+  const d = noiseBuf.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+}
+
+function keyClack(vol) {
+  if (!AC) return;
+  const t = AC.currentTime;
+  const src = AC.createBufferSource();
+  src.buffer = noiseBuf;
+  const bp = AC.createBiquadFilter();
+  bp.type = 'bandpass';
+  bp.frequency.value = 2000 + Math.random() * 2500;
+  bp.Q.value = 1.5;
+  const g = AC.createGain();
+  g.gain.setValueAtTime(Math.min(vol, 0.9), t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + 0.045);
+  src.connect(bp); bp.connect(g); g.connect(master);
+  src.start(t); src.stop(t + 0.05);
+
+  const o = AC.createOscillator();
+  o.type = 'triangle';
+  o.frequency.setValueAtTime(140 + Math.random() * 60, t);
+  o.frequency.exponentialRampToValueAtTime(50, t + 0.03);
+  const g2 = AC.createGain();
+  g2.gain.setValueAtTime(Math.min(vol, 0.5) * 0.8, t);
+  g2.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+  o.connect(g2); g2.connect(master);
+  o.start(t); o.stop(t + 0.06);
+}
+
+function ding() {
+  if (!AC) return;
+  const t = AC.currentTime;
+  [1244, 1867, 2489].forEach((f, i) => {
+    const o = AC.createOscillator();
+    o.type = 'sine';
+    o.frequency.value = f;
+    const g = AC.createGain();
+    g.gain.setValueAtTime([0.30, 0.12, 0.06][i], t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 1.4 - i * 0.3);
+    o.connect(g); g.connect(master);
+    o.start(t); o.stop(t + 1.5);
+  });
+}
+
+function carriage() {
+  if (!AC) return;
+  const t = AC.currentTime;
+  const src = AC.createBufferSource();
+  src.buffer = noiseBuf; src.loop = true;
+  const bp = AC.createBiquadFilter();
+  bp.type = 'bandpass';
+  bp.frequency.setValueAtTime(600, t);
+  bp.frequency.exponentialRampToValueAtTime(2400, t + 0.28);
+  bp.Q.value = 2;
+  const g = AC.createGain();
+  g.gain.setValueAtTime(0.16, t);
+  g.gain.setValueAtTime(0.16, t + 0.22);
+  g.gain.exponentialRampToValueAtTime(0.001, t + 0.32);
+  src.connect(bp); bp.connect(g); g.connect(master);
+  src.start(t); src.stop(t + 0.35);
+}
+
+function clackBudget() {
+  const now = performance.now();
+  clackTimes = clackTimes.filter(x => now - x < 70);
+  if (clackTimes.length >= 4) return false;
+  clackTimes.push(now);
+  return true;
+}
+
+/* ---------- mise en page ---------- */
+const meas = document.createElement('canvas').getContext('2d');
+
+function layout(text) {
+  meas.font = FONT;
+  const maxWidth = Math.min(W * 0.82, 900);
+  const lines = [];
+  for (const raw of text.split('\n')) {
+    const words = raw.split(' ');
+    let line = '';
+    for (const w of words) {
+      const test = line ? line + ' ' + w : w;
+      if (meas.measureText(test).width > maxWidth && line) {
+        lines.push(line);
+        line = w;
+      } else line = test;
+    }
+    lines.push(line);
+  }
+  const lh = FONT_SIZE * 1.55;
+  const totalH = lines.length * lh;
+  const top = Math.max(H * 0.16, (H - totalH) / 2);
+  const placed = [];
+  lines.forEach((line, li) => {
+    const lw = meas.measureText(line).width;
+    let x = (W - lw) / 2;
+    const y = top + li * lh;
+    for (const ch of line) {
+      placed.push({ ch, x, y });
+      x += meas.measureText(ch).width;
+    }
+  });
+  return placed;
+}
+
+function makeLetter(ch, x, y) {
+  const el = document.createElement('span');
+  el.className = 'letter';
+  el.textContent = ch;
+  el.style.fontSize = FONT_SIZE + 'px';
+  stage.appendChild(el);
+  return {
+    ch, el,
+    hx: x, hy: y,
+    px: x + (Math.random() - 0.5) * 60,
+    py: y + (Math.random() - 0.5) * 60,
+    vx: 0, vy: 0,
+    appear: 0, lastClack: 0
+  };
+}
+
+function buildTargets(text) {
+  const placed = layout(text);
+  const old = letters;
+  letters = [];
+  const n = Math.min(old.length, placed.length);
+  for (let i = 0; i < n; i++) {
+    const l = old[i];
+    l.ch = placed[i].ch;
+    l.el.textContent = l.ch;
+    l.hx = placed[i].x; l.hy = placed[i].y;
+    letters.push(l);
+  }
+  for (let i = n; i < placed.length; i++) {
+    const seed = old.length ? old[(i * 7) % old.length] : null;
+    const l = makeLetter(placed[i].ch, placed[i].x, placed[i].y);
+    if (seed) { l.px = seed.px; l.py = seed.py; }
+    letters.push(l);
+  }
+  for (let i = placed.length; i < old.length; i++) old[i].el.remove();
+}
+
+function showText(idx, typedIntro) {
+  current = idx;
+  buildTargets(TEXTES[idx]);
+  badge.textContent = `variante ${idx + 1} / ${TEXTES.length}`;
+  const now = performance.now();
+  letters.forEach((l, i) => {
+    l.appear = typedIntro ? now + 120 + i * 26 : now;
+    if (typedIntro) { l.px = l.hx; l.py = l.hy; l.vx = 0; l.vy = 0; }
+  });
+}
+
+/* ---------- interactions ---------- */
+function wake() { initAudio(); if (AC.state === 'suspended') AC.resume(); }
+
+addEventListener('mousemove', e => {
+  wake();
+  const nx = e.clientX, ny = e.clientY;
+  mouse.vx = nx - mouse.x;
+  mouse.vy = ny - mouse.y;
+  mouse.x = nx; mouse.y = ny;
+  mouse.speed = Math.hypot(mouse.vx, mouse.vy);
+});
+
+addEventListener('click', () => {
+  wake();
+  if (frozen) toggleFreeze();
+  ding();
+  carriage();
+  let next;
+  do { next = Math.floor(Math.random() * TEXTES.length); } while (next === current);
+  letters.forEach(l => {
+    const a = Math.random() * Math.PI * 2;
+    const p = 6 + Math.random() * 14;
+    l.vx += Math.cos(a) * p;
+    l.vy += Math.sin(a) * p;
+  });
+  setTimeout(() => showText(next, false), 420);
+});
+
+function toggleFreeze() {
+  frozen = !frozen;
+  pausedEl.classList.toggle('on', frozen);
+  if (frozen) letters.forEach(l => { l.vx = 0; l.vy = 0; });
+}
+
+addEventListener('keydown', e => {
+  if (e.code === 'Space') {
+    e.preventDefault();
+    wake();
+    toggleFreeze();
+  }
+});
+
+addEventListener('resize', () => {
+  W = innerWidth; H = innerHeight;
+  if (current >= 0) showText(current, false);
+});
+
+/* ---------- boucle physique ---------- */
+const WIND_R = 170;
+let last = performance.now();
+
+function tick(now) {
+  requestAnimationFrame(tick);
+  const dt = Math.min((now - last) / 16.667, 2.5);
+  last = now;
+
+  for (const l of letters) {
+    if (now < l.appear) { l.el.style.opacity = '0'; continue; }
+    l.el.style.opacity = '1';
+
+    if (!frozen) {
+      let fx = (l.hx - l.px) * 0.045;
+      let fy = (l.hy - l.py) * 0.045;
+
+      const dx = l.px - mouse.x, dy = l.py - mouse.y;
+      const d2 = dx * dx + dy * dy;
+      if (mouse.speed > 0.3 && d2 < WIND_R * WIND_R) {
+        const fall = 1 - Math.sqrt(d2) / WIND_R;
+        const g = fall * fall * mouse.speed * 0.16;
+        fx += mouse.vx * g + (dx / (Math.sqrt(d2) + 1)) * fall * 0.3;
+        fy += mouse.vy * g + (dy / (Math.sqrt(d2) + 1)) * fall * 0.3;
+      }
+
+      l.vx += fx * dt;
+      l.vy += fy * dt;
+      l.vx *= Math.pow(0.86, dt);
+      l.vy *= Math.pow(0.86, dt);
+
+      const speed = Math.hypot(l.vx, l.vy);
+      if (speed > 4.5 && now - l.lastClack > 160 && clackBudget()) {
+        l.lastClack = now;
+        keyClack(Math.min(speed / 28, 0.7));
+      }
+
+      l.px += l.vx * dt;
+      l.py += l.vy * dt;
+    }
+
+    l.el.style.transform = `translate(${l.px}px, ${l.py}px) rotate(${frozen ? 0 : l.vx * 0.8}deg)`;
+  }
+
+  mouse.vx *= 0.7;
+  mouse.vy *= 0.7;
+  mouse.speed *= 0.7;
+}
+
+document.fonts.load(FONT).then(() => {
+  meas.font = FONT;
+  showText(Math.floor(Math.random() * TEXTES.length), true);
+  requestAnimationFrame(tick);
+});
+</script>
+</body>
+</html>

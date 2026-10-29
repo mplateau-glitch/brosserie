@@ -314,8 +314,19 @@ function clackBudget() {
 /* ---------- mise en page ---------- */
 const meas = document.createElement('canvas').getContext('2d');
 
+/* largeur de repli par caractère (police non chargée / canvas indisponible) */
+const FALLBACK_W = FONT_SIZE * 0.62;
+function charWidth(ch) {
+  const w = meas.measureText(ch).width;
+  return w > 0 ? w : (ch === ' ' ? FALLBACK_W * 0.66 : FALLBACK_W);
+}
+function lineWidth(s) {
+  let t = 0;
+  for (const ch of s) t += charWidth(ch);
+  return t;
+}
+
 function layout(text) {
-  meas.font = FONT;
   const maxWidth = Math.min(W * 0.82, 900);
   const lines = [];
   for (const raw of text.split('\n')) {
@@ -323,7 +334,7 @@ function layout(text) {
     let line = '';
     for (const w of words) {
       const test = line ? line + ' ' + w : w;
-      if (meas.measureText(test).width > maxWidth && line) {
+      if (lineWidth(test) > maxWidth && line) {
         lines.push(line);
         line = w;
       } else line = test;
@@ -335,12 +346,12 @@ function layout(text) {
   const top = Math.max(H * 0.16, (H - totalH) / 2);
   const placed = [];
   lines.forEach((line, li) => {
-    const lw = meas.measureText(line).width;
+    const lw = lineWidth(line);
     let x = (W - lw) / 2;
     const y = top + li * lh;
     for (const ch of line) {
       placed.push({ ch, x, y });
-      x += meas.measureText(ch).width;
+      x += charWidth(ch);
     }
   });
   return placed;
@@ -489,11 +500,21 @@ function tick(now) {
   mouse.speed *= 0.7;
 }
 
-document.fonts.load(FONT).then(() => {
+let started = false;
+function start() {
+  if (started) return;
+  started = true;
   meas.font = FONT;
   showText(Math.floor(Math.random() * TEXTES.length), true);
   requestAnimationFrame(tick);
-});
+}
+
+if (document.fonts && document.fonts.ready) {
+  Promise.race([
+    document.fonts.load(FONT).catch(() => {}),
+    new Promise(r => setTimeout(r, 2500))
+  ]).then(() => document.fonts.ready).then(start, start);
+} else start();
 </script>
 </body>
 </html>

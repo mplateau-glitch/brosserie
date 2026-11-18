@@ -113,6 +113,7 @@
     <h2>Savoir reconnaître temps et modes</h2>
     <p class="indice" id="record"></p>
     <button class="btn" id="btn-start">Lancer une session de 20 questions</button>
+    <div id="liste-corrections"></div>
   </div>
 
   <div id="ecran-quiz" class="carte cache">
@@ -250,6 +251,9 @@ function normaliser(s){
   var t = s.split(" ");
   while(t.length && (t[0]==="que" || t[0]==="qu" || t[0]==="j" || (t[0].indexOf("qu")===0 && t[0].length<=6) || PRONOMS.indexOf(t[0])>=0)) t.shift();
   return t.join(" ");
+}
+function normaliserSouple(s){
+  return normaliser(s).normalize("NFD").replace(/\u0302/g, "");
 }
 function alea(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 function melanger(arr){
@@ -495,6 +499,18 @@ function questionConj(verbe, mode, temps, p){
 
 var TAILLE_SESSION = 20, N_RECOG = 13, N_CONJ = 7;
 
+function cleQuestion(q){
+  if(q.type === "texte") return "texte|" + q.verbe + "|" + q.mode + "|" + q.temps + "|" + q.p;
+  return "qcm|" + (q.texte ? q.texte + "|" + q.cible : q.question);
+}
+function chargerOverrides(){
+  try { return JSON.parse(localStorage.getItem("conj1er_overrides") || "{}"); }
+  catch(e){ return {}; }
+}
+function sauverOverrides(o){
+  try { localStorage.setItem("conj1er_overrides", JSON.stringify(o)); } catch(e){}
+}
+
 function construireSession(){
   var recog = melanger(RECOG).slice(0, N_RECOG);
   recog.forEach(function(q){ q.cat = "reconnaissance"; q.type = "qcm"; });
@@ -516,7 +532,16 @@ function construireSession(){
     conj.push(questionConj(verbeAleatoire(), mode, temps, p));
   }
 
-  return melanger(recog.concat(conj)).slice(0, TAILLE_SESSION);
+  var toutes = recog.concat(conj);
+  var ov = chargerOverrides();
+  toutes.forEach(function(q){
+    var o = ov[cleQuestion(q)];
+    if(o){
+      if(o.bonne != null && q.options) q.bonne = o.bonne;
+      if(o.attendu) q.attendu = o.attendu;
+    }
+  });
+  return melanger(toutes).slice(0, TAILLE_SESSION);
 }
 
 /* ================= Moteur d'affichage ================= */
@@ -532,6 +557,29 @@ function majHUD(){
 function recordAffiche(){
   var best = localStorage.getItem("conj1er_best");
   $("record").textContent = best ? "Meilleur score : " + best + " points." : "";
+  afficherCorrections();
+}
+function afficherCorrections(){
+  var el = $("liste-corrections");
+  if(!el) return;
+  var ov = chargerOverrides();
+  var keys = Object.keys(ov);
+  if(!keys.length){ el.innerHTML = "<p class='indice'>Aucune correction enregistrée pour le moment.</p>"; return; }
+  el.innerHTML = "<h3>Corrections enregistrées</h3><ul class='regles'>" + keys.map(function(k){
+    var o = ov[k];
+    var label = k.indexOf("texte|") === 0 ? k.split("|").slice(1).join(" — ") : k.slice(4, 90) + "…";
+    var val = o.attendu != null ? o.attendu : "option n°" + o.bonne;
+    return "<li><code>" + label + "</code> → <b>" + val + "</b> " +
+      "<button class='btn-suppr' data-k='" + encodeURIComponent(k) + "' style='margin-left:8px'>supprimer</button></li>";
+  }).join("") + "</ul>";
+  Array.prototype.forEach.call(el.querySelectorAll(".btn-suppr"), function(b){
+    b.addEventListener("click", function(){
+      var ov2 = chargerOverrides();
+      delete ov2[decodeURIComponent(b.getAttribute("data-k"))];
+      sauverOverrides(ov2);
+      afficherCorrections();
+    });
+  });
 }
 function highlight(texte, cible){
   var i = texte.indexOf(cible);
@@ -616,6 +664,49 @@ function boutonCorrectionManuelle(){
     majHUD();
   });
   f.appendChild(b);
+
+  var q = session[index];
+  var wrap = document.createElement("div");
+  wrap.style.marginTop = "10px";
+  var inp = document.createElement("input");
+  inp.className = "reponse";
+  inp.style.maxWidth = "300px";
+  inp.style.marginRight = "8px";
+  inp.placeholder = "Bonne réponse corrigée à enregistrer…";
+  var bSave = document.createElement("button");
+  bSave.className = "btn secondaire";
+  bSave.style.padding = "6px 14px";
+  bSave.style.fontSize = ".85rem";
+  bSave.textContent = "Enregistrer la correction";
+  bSave.addEventListener("click", function(){
+    var v = inp.value.trim();
+    if(!v) return;
+    var k = cleQuestion(q);
+    var ov = chargerOverrides();
+    var o = ov[k] || {};
+    if(q.type === "texte"){
+      o.attendu = v;
+      q.attendu = v;
+    } else {
+      var idx = parseInt(v, 10);
+      var found = -1;
+      if(!isNaN(idx) && q.options && q.options[idx] != null) found = idx;
+      else if(q.options){
+        q.options.forEach(function(op, i){ if(normaliser(op) === normaliser(v)) found = i; });
+      }
+      if(found < 0){ alert("Option introuvable : indique le n° (0 à " + (q.options.length-1) + ") ou le texte exact d'une option."); return; }
+      o.bonne = found;
+      q.bonne = found;
+    }
+    ov[k] = o;
+    sauverOverrides(ov);
+    bSave.textContent = "✔ Correction enregistrée (appliquée aux prochaines sessions)";
+    bSave.disabled = true;
+    inp.disabled = true;
+  });
+  wrap.appendChild(inp);
+  wrap.appendChild(bSave);
+  f.appendChild(wrap);
 }
 
 function repondreQCM(q, choix, bouton){
@@ -644,7 +735,7 @@ function repondreTexte(q, val){
   if($("btn-valider").disabled) return;
   $("btn-valider").disabled = true;
   $("rep").disabled = true;
-  var ok = normaliser(val) === normaliser(q.attendu);
+  var ok = normaliser(val) === normaliser(q.attendu) || normaliserSouple(val) === normaliserSouple(q.attendu);
   var pts = ok ? 1 : 0;
   score += pts;
   if(ok) reussies++;

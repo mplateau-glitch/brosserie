@@ -526,7 +526,7 @@ var TAILLE_SESSION = 20, N_RECOG = 13, N_CONJ = 7;
 
 function construireSession(){
   var recog = melanger(RECOG).slice(0, N_RECOG);
-  recog.forEach(function(q){ q.cat = "reconnaissance"; });
+  recog.forEach(function(q){ q.cat = "reconnaissance"; q.type = "qcm"; });
   var couvertes = {};
   recog.forEach(function(q){ (q.cles||[]).forEach(function(k){ couvertes[k]=true; }); });
 

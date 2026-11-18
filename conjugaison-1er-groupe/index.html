@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Verbes du 1er groupe — Entraînement 2nde</title>
+<title>Savoir reconnaître temps et modes — verbes du 1er groupe (2nde)</title>
 <style>
   :root{
     --fond:#f6f3ec; --carte:#fffdf8; --encre:#2b2620; --accent:#7a4fa3;
@@ -105,20 +105,12 @@
 </head>
 <body>
 <header>
-  <h1>Verbes du 1<sup>er</sup> groupe — identification &amp; conjugaison (2nde)</h1>
+  <h1>Savoir reconnaître temps et modes — verbes du 1<sup>er</sup> groupe (2nde)</h1>
   <div id="hud">Score : <b id="score">0</b> point(s) &nbsp;·&nbsp; <span id="prog"></span></div>
 </header>
 <main>
   <div id="ecran-accueil" class="carte">
-    <h2>S'entraîner aux temps et modes du verbe</h2>
-    <p>Chaque session comporte <b>20 questions</b> :</p>
-    <ul class="regles">
-      <li><b>2/3 de questions de reconnaissance</b> : la forme verbale soulignée est tirée d'un <b>texte littéraire du XVIII<sup>e</sup> au XX<sup>e</sup> siècle</b> (auteur et titre indiqués) ;</li>
-      <li><b>1/3 de questions de conjugaison</b> des verbes du premier groupe (-er), dont des <b>tableaux à compléter</b> comme celui du test « Morphologie des temps » ;</li>
-      <li>les <b>temps moins connus</b> sont privilégiés : passé antérieur, futur antérieur, plus-que-parfait de l'indicatif, conditionnel présent et passé, futur, imparfait du subjonctif, plus-que-parfait du subjonctif ;</li>
-      <li><b>les points apparaissent à chaque question répondue</b> (1 point par question ; 1 point par case pour un tableau).</li>
-    </ul>
-    <p class="indice">Questions inspirées du QCM « Identification temps et modes verbaux 2nde ».</p>
+    <h2>Savoir reconnaître temps et modes</h2>
     <p class="indice" id="record"></p>
     <button class="btn" id="btn-start">Lancer une session de 20 questions</button>
   </div>
@@ -252,11 +244,11 @@ function labelModeTemps(mode, temps){
 }
 function normaliser(s){
   if(s == null) s = "";
-  s = String(s).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
-  s = s.replace(/['’ʼ`]/g, "");
-  s = s.replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
+  s = String(s).toLowerCase();
+  s = s.replace(/['’ʼ`]/g, " ");
+  s = s.replace(/[^a-zàâäéèêëîïôöùûüçœæ0-9 ]/g, " ").replace(/\s+/g, " ").trim();
   var t = s.split(" ");
-  while(t.length && (t[0]==="que" || t[0]==="qu" || PRONOMS.indexOf(t[0])>=0 || (t[0].indexOf("qu")===0 && t[0].length<=6))) t.shift();
+  while(t.length && (t[0]==="que" || t[0]==="qu" || t[0]==="j" || (t[0].indexOf("qu")===0 && t[0].length<=6) || PRONOMS.indexOf(t[0])>=0)) t.shift();
   return t.join(" ");
 }
 function alea(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
@@ -499,28 +491,7 @@ function questionConj(verbe, mode, temps, p){
   };
 }
 
-var LIGNES_TABLEAU = [
-  ["indicatif","présent"],["indicatif","imparfait"],["indicatif","passé simple"],
-  ["indicatif","passé composé"],["indicatif","futur simple"],["indicatif","futur antérieur"],
-  ["indicatif","plus-que-parfait"],["indicatif","passé antérieur"],
-  ["conditionnel","présent"],["conditionnel","passé"],
-  ["subjonctif","présent"],["subjonctif","imparfait"],["subjonctif","passé"],["subjonctif","plus-que-parfait"],
-  ["impératif","présent"],["impératif","passé"],
-  ["participe","présent"],["participe","passé"],
-  ["infinitif","présent"],["gérondif","présent"]
-];
-var LIGNES_RARES = ["indicatif|futur antérieur","indicatif|plus-que-parfait","indicatif|passé antérieur",
-  "conditionnel|présent","conditionnel|passé","subjonctif|imparfait","subjonctif|plus-que-parfait"];
-
-function questionTableau(verbe){
-  var rares = melanger(LIGNES_RARES).slice(0,3).map(function(k){ return k.split("|"); });
-  var autres = melanger(LIGNES_TABLEAU.filter(function(l){ return LIGNES_RARES.indexOf(cle(l[0],l[1]))<0; })).slice(0,5);
-  var lignes = melanger(rares.concat(autres));
-  return { type:"tableau", cat:"conjugaison", verbe:verbe, lignes:lignes,
-    question:"Complète le tableau de conjugaison du verbe « " + verbe + " » (comme dans le test « Morphologie des temps » : 1re personne du singulier et 1re personne du pluriel). 1 point par case correcte." };
-}
-
-/* ================= Session de 20 questions : 2/3 reconnaissance, 1/3 conjugaison ================= */
+/* ================= Session de 20 questions : 2/3 reconnaissance, 1/3 conjugaison (1 forme par question) ================= */
 
 var TAILLE_SESSION = 20, N_RECOG = 13, N_CONJ = 7;
 
@@ -536,7 +507,7 @@ function construireSession(){
     return TPS_RARES.every(function(r){ return cle(r[0],r[1])!==cle(t[0],t[1]); });
   });
   var cibles = melanger(manquantes).concat(melanger(autres));
-  for(var i=0;i<3;i++){
+  for(var i=0;i<5;i++){
     var t = cibles[i % cibles.length];
     var mode = t[0], temps = t[1], p;
     if(mode==="impératif") p = alea([1,3,4]);
@@ -544,8 +515,6 @@ function construireSession(){
     else p = Math.floor(Math.random()*6);
     conj.push(questionConj(verbeAleatoire(), mode, temps, p));
   }
-  conj.push(questionTableau(verbeAleatoire()));
-  conj.push(questionTableau(verbeAleatoire()));
 
   return melanger(recog.concat(conj)).slice(0, TAILLE_SESSION);
 }
@@ -616,28 +585,6 @@ function afficherQuestion(){
     function valider(){ repondreTexte(q, input.value); }
     $("btn-valider").addEventListener("click", valider);
     input.addEventListener("keydown", function(e){ if(e.key==="Enter") valider(); });
-  } else if(q.type === "tableau"){
-    html += '<p class="consigne">' + q.question + '</p>';
-    html += '<table class="tabconj"><thead><tr><th>Mode — temps</th><th>je</th><th>nous</th></tr></thead><tbody>';
-    q.lignes.forEach(function(l, i){
-      var mode = l[0], temps = l[1];
-      var impersonnel = (mode==="participe"||mode==="infinitif"||mode==="gérondif");
-      var imperatif = (mode==="impératif");
-      html += '<tr><td class="mode">' + mode.charAt(0).toUpperCase()+mode.slice(1) + ' — ' + temps + '</td>';
-      if(impersonnel){
-        html += '<td colspan="2"><input data-i="' + i + '" data-p="0" placeholder="…"></td>';
-      } else if(imperatif){
-        html += '<td>—</td><td><input data-i="' + i + '" data-p="3" placeholder="…"></td>';
-      } else {
-        html += '<td><input data-i="' + i + '" data-p="0" placeholder="…"></td>';
-        html += '<td><input data-i="' + i + '" data-p="3" placeholder="…"></td>';
-      }
-      html += '</tr>';
-    });
-    html += '</tbody></table>';
-    html += '<button class="btn secondaire" id="btn-valider">Valider le tableau</button>';
-    z.innerHTML = html;
-    $("btn-valider").addEventListener("click", function(){ repondreTableau(q); });
   }
 }
 
@@ -645,6 +592,30 @@ function feedback(html, ok){
   var f = $("feedback");
   f.className = "feedback " + (ok ? "bon" : "faux");
   f.innerHTML = html;
+}
+
+function boutonCorrectionManuelle(){
+  var f = $("feedback");
+  var b = document.createElement("button");
+  b.className = "btn secondaire";
+  b.id = "btn-corriger";
+  b.style.marginLeft = "10px";
+  b.style.padding = "6px 14px";
+  b.style.fontSize = ".85rem";
+  b.textContent = "Corriger manuellement (inverser juste / faux)";
+  b.addEventListener("click", function(){
+    var r = reponses[reponses.length-1];
+    if(!r) return;
+    if(r.ok){ r.ok = false; r.pts = 0; score -= 1; reussies -= 1; }
+    else { r.ok = true; r.pts = 1; score += 1; reussies += 1; }
+    f.className = "feedback " + (r.ok ? "bon" : "faux");
+    f.innerHTML = '<span class="points' + (r.ok ? " plus" : "") + '">' +
+      (r.ok ? "✔ Question comptée juste — +1 point (correction manuelle)"
+            : "✘ Question comptée fausse — 0 point (correction manuelle)") + '</span>';
+    b.disabled = true;
+    majHUD();
+  });
+  f.appendChild(b);
 }
 
 function repondreQCM(q, choix, bouton){
@@ -664,6 +635,7 @@ function repondreQCM(q, choix, bouton){
   if(q.texte) html += '<div class="explication">Source : ' + q.auteur + ', <i>' + q.oeuvre + '</i>, ' + q.detail + '.</div>';
   if(q.source) html += '<div class="explication">' + q.source + '</div>';
   feedback(html, ok);
+  boutonCorrectionManuelle();
   $("btn-suivant").classList.remove("cache");
   majHUD();
 }
@@ -681,35 +653,7 @@ function repondreTexte(q, val){
                  : '<span class="points">✘ Mauvaise réponse. Bonne réponse : <b>' + q.attendu + '</b> — 0 point</span>');
   html += '<div class="explication">' + q.explication + '</div>';
   feedback(html, ok);
-  $("btn-suivant").classList.remove("cache");
-  majHUD();
-}
-
-function repondreTableau(q){
-  if($("btn-valider").disabled) return;
-  $("btn-valider").disabled = true;
-  var inputs = $("zone-question").querySelectorAll("input");
-  var nbOK = 0, nbTotal = 0;
-  Array.prototype.forEach.call(inputs, function(inp){
-    var i = parseInt(inp.getAttribute("data-i"),10);
-    var p = parseInt(inp.getAttribute("data-p"),10);
-    var l = q.lignes[i];
-    var attendu = forme(q.verbe, l[0], l[1], p);
-    nbTotal++;
-    var ok = normaliser(inp.value) === normaliser(attendu);
-    if(ok){ nbOK++; inp.classList.add("bonne"); } else { inp.classList.add("fausse"); }
-    inp.disabled = true;
-    inp.title = "Bonne réponse : " + attendu;
-  });
-  var pts = nbOK;
-  score += pts;
-  if(nbOK === nbTotal) reussies++;
-  reponses.push({q:q, ok:(nbOK===nbTotal), reponse:nbOK + "/" + nbTotal + " cases justes", bonne:"tableau complet", pts:pts});
-  var html = (nbOK===nbTotal
-    ? '<span class="points plus">✔ Tableau complet ! +' + pts + ' points</span>'
-    : '<span class="points">' + nbOK + ' / ' + nbTotal + ' cases justes — +' + pts + ' point' + (pts>1?"s":"") + '</span> (les bonnes réponses s\'affichent au survol des cases rouges)');
-  html += '<div class="explication">Verbe « ' + q.verbe + ' » — lignes : ' + q.lignes.map(function(l){ return l[0] + " " + l[1]; }).join(", ") + '.</div>';
-  feedback(html, nbOK===nbTotal);
+  boutonCorrectionManuelle();
   $("btn-suivant").classList.remove("cache");
   majHUD();
 }

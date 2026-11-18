@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verbes du 1er groupe — Entraînement 2nde</title>
+<style>
+  :root{
+    --fond:#f6f3ec; --carte:#fffdf8; --encre:#2b2620; --accent:#7a4fa3;
+    --accent2:#3f7fbf; --bon:#2e7d32; --faux:#c62828; --bord:#ddd5c4;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--fond); color:var(--encre);
+    font-family: Georgia, 'Times New Roman', serif; line-height:1.5;
+  }
+  header{
+    background:var(--encre); color:var(--fond); padding:14px 20px;
+    display:flex; flex-wrap:wrap; gap:10px 24px; align-items:baseline;
+    justify-content:space-between;
+  }
+  header h1{font-size:1.15rem; margin:0; font-weight:normal; letter-spacing:.3px;}
+  #hud{font-family:'Courier New', monospace; font-size:.95rem;}
+  #hud b{color:#ffd54f;}
+  main{max-width:820px; margin:0 auto; padding:22px 16px 60px;}
+  .carte{
+    background:var(--carte); border:1px solid var(--bord); border-radius:10px;
+    padding:22px 24px; box-shadow:0 2px 8px rgba(43,38,32,.08);
+  }
+  h2{font-size:1.3rem; margin-top:0;}
+  .btn{
+    display:inline-block; background:var(--accent); color:#fff; border:none;
+    padding:12px 26px; font-size:1.05rem; border-radius:8px; cursor:pointer;
+    font-family:inherit; margin-top:14px;
+  }
+  .btn:hover{background:#68408c;}
+  .btn.secondaire{background:var(--accent2);}
+  .btn.secondaire:hover{background:#356a9f;}
+  .etiquette{
+    display:inline-block; font-family:'Courier New',monospace; font-size:.75rem;
+    padding:2px 10px; border-radius:20px; background:#ece5f5; color:var(--accent);
+    border:1px solid #d5c8e8; margin-bottom:10px; text-transform:uppercase; letter-spacing:.5px;
+  }
+  .etiquette.conj{background:#e3eefb; color:var(--accent2); border-color:#c4d9ef;}
+  blockquote.extrait{
+    margin:14px 0; padding:14px 18px; background:#f4efe0; border-left:4px solid var(--accent);
+    font-style:italic; font-size:1.08rem; border-radius:0 8px 8px 0;
+  }
+  blockquote.extrait mark{background:#ffe082; padding:0 2px; border-radius:3px; font-style:normal; font-weight:bold;}
+  .source{font-size:.88rem; color:#6b6355; margin:-6px 0 12px 4px;}
+  .source i{color:var(--encre);}
+  .consigne{font-size:1.02rem; margin:10px 0 16px;}
+  .options{display:flex; flex-direction:column; gap:10px; margin:14px 0;}
+  .option{
+    text-align:left; background:#fff; border:1.5px solid var(--bord); border-radius:8px;
+    padding:11px 16px; font-size:1rem; cursor:pointer; font-family:inherit; color:var(--encre);
+  }
+  .option:hover:not(:disabled){border-color:var(--accent); background:#f6f0fb;}
+  .option:disabled{cursor:default;}
+  .option.bonne{border-color:var(--bon); background:#e6f2e6;}
+  .option.fausse{border-color:var(--faux); background:#fbe7e7;}
+  .option .cle{font-family:'Courier New',monospace; font-size:.8rem; color:#888; margin-right:8px;}
+  input.reponse{
+    width:100%; max-width:420px; padding:11px 14px; font-size:1.05rem; font-family:inherit;
+    border:1.5px solid var(--bord); border-radius:8px; margin:8px 0 4px;
+  }
+  input.reponse:focus{outline:none; border-color:var(--accent);}
+  .indice{font-size:.85rem; color:#6b6355;}
+  table.tabconj{border-collapse:collapse; margin:12px 0; width:100%; font-size:.98rem;}
+  table.tabconj th, table.tabconj td{border:1px solid var(--bord); padding:7px 10px; text-align:left;}
+  table.tabconj th{background:#efe9db; font-family:'Courier New',monospace; font-size:.85rem;}
+  table.tabconj td.mode{font-weight:bold; background:#f7f4ec;}
+  table.tabconj input{
+    width:100%; min-width:110px; padding:6px 8px; font-family:inherit; font-size:.95rem;
+    border:1px solid #cfc7b4; border-radius:5px;
+  }
+  table.tabconj input.bonne{border-color:var(--bon); background:#e6f2e6;}
+  table.tabconj input.fausse{border-color:var(--faux); background:#fbe7e7;}
+  .feedback{
+    margin-top:16px; padding:12px 16px; border-radius:8px; font-size:1rem; display:none;
+  }
+  .feedback.bon{display:block; background:#e6f2e6; border:1px solid var(--bon);}
+  .feedback.faux{display:block; background:#fbe7e7; border:1px solid var(--faux);}
+  .feedback .points{font-family:'Courier New',monospace; font-weight:bold;}
+  .feedback .points.plus{color:var(--bon);}
+  .explication{font-size:.92rem; margin-top:8px; color:#4a4438;}
+  .barre{height:8px; background:#e5dfd0; border-radius:6px; overflow:hidden; margin:6px 0 18px;}
+  .barre div{height:100%; background:var(--accent); width:0; transition:width .3s;}
+  #prog{font-family:'Courier New',monospace; font-size:.85rem; color:#6b6355;}
+  .recap{margin:0; padding-left:0; list-style:none;}
+  .recap li{
+    padding:10px 12px; border:1px solid var(--bord); border-radius:8px; margin-bottom:8px;
+    font-size:.92rem; background:#fff;
+  }
+  .recap .ok{color:var(--bon); font-weight:bold;}
+  .recap .ko{color:var(--faux); font-weight:bold;}
+  .recap .q{font-weight:bold;}
+  .recap .src{color:#6b6355; font-size:.83rem;}
+  .resume{font-size:1.15rem; text-align:center; margin:8px 0 4px;}
+  .resume b{font-size:1.5rem; color:var(--accent);}
+  ul.regles{padding-left:20px;}
+  ul.regles li{margin-bottom:6px;}
+  .cache{display:none;}
+</style>
+</head>
+<body>
+<header>
+  <h1>Verbes du 1<sup>er</sup> groupe — identification &amp; conjugaison (2nde)</h1>
+  <div id="hud">Score : <b id="score">0</b> point(s) &nbsp;·&nbsp; <span id="prog"></span></div>
+</header>
+<main>
+  <div id="ecran-accueil" class="carte">
+    <h2>S'entraîner aux temps et modes du verbe</h2>
+    <p>Chaque session comporte <b>20 questions</b> :</p>
+    <ul class="regles">
+      <li><b>2/3 de questions de reconnaissance</b> : la forme verbale soulignée est tirée d'un <b>texte littéraire du XVIII<sup>e</sup> au XX<sup>e</sup> siècle</b> (auteur et titre indiqués) ;</li>
+      <li><b>1/3 de questions de conjugaison</b> des verbes du premier groupe (-er), dont des <b>tableaux à compléter</b> comme celui du test « Morphologie des temps » ;</li>
+      <li>les <b>temps moins connus</b> sont privilégiés : passé antérieur, futur antérieur, plus-que-parfait de l'indicatif, conditionnel présent et passé, futur, imparfait du subjonctif, plus-que-parfait du subjonctif ;</li>
+      <li><b>les points apparaissent à chaque question répondue</b> (1 point par question ; 1 point par case pour un tableau).</li>
+    </ul>
+    <p class="indice">Questions inspirées du QCM « Identification temps et modes verbaux 2nde ».</p>
+    <p class="indice" id="record"></p>
+    <button class="btn" id="btn-start">Lancer une session de 20 questions</button>
+  </div>
+
+  <div id="ecran-quiz" class="carte cache">
+    <div class="barre"><div id="barre"></div></div>
+    <span class="etiquette" id="etiquette"></span>
+    <div id="zone-question"></div>
+    <div class="feedback" id="feedback"></div>
+    <button class="btn cache" id="btn-suivant">Question suivante</button>
+  </div>
+
+  <div id="ecran-fin" class="carte cache">
+    <h2>Session terminée</h2>
+    <p class="resume">Score : <b id="score-final"></b> points<br>
+    <span id="reussies"></span></p>
+    <p class="indice" id="record2"></p>
+    <h3>Récapitulatif</h3>
+    <ul class="recap" id="recap"></ul>
+    <button class="btn" id="btn-rejouer">Nouvelle session</button>
+  </div>
+</main>
+
+<script>
+"use strict";
+/* ================= Moteur de conjugaison (verbes du 1er groupe en -er) ================= */
+
+var AVOIR = {
+  "présent":        ["ai","as","a","avons","avez","ont"],
+  "imparfait":      ["avais","avais","avait","avions","aviez","avaient"],
+  "passé simple":   ["eus","eus","eut","eûmes","eûtes","eurent"],
+  "futur simple":   ["aurai","auras","aura","aurons","aurez","auront"],
+  "conditionnel":   ["aurais","aurais","aurait","aurions","auriez","auraient"],
+  "subj présent":   ["aie","aies","ait","ayons","ayez","aient"],
+  "subj imparfait": ["eusse","eusses","eût","eussions","eussiez","eussent"],
+  "impératif":      [null,"aie",null,"ayons","ayez",null]
+};
+
+function rad(inf){ return inf.slice(0,-2); }
+function isGer(inf){ return /ger$/.test(inf); }
+function isCer(inf){ return /cer$/.test(inf); }
+function isYer(inf){ return /yer$/.test(inf); }
+function isDouble(inf){ return /(eler|eter)$/.test(inf); }
+function isEAcc(inf){ return /é[bcdfgjklmnpqrstvwxz]+er$/.test(inf); }
+
+function conj(inf){
+  var s = rad(inf);
+  var ger = isGer(inf), cer = isCer(inf);
+  function preAO(){ if(ger) return s+"e"; if(cer) return s.slice(0,-1)+"ç"; return s; }
+  var ps;
+  if(isYer(inf)) ps = s.slice(0,-1)+"i";
+  else if(isDouble(inf)) ps = s + s.slice(-1);
+  else if(isEAcc(inf)) ps = s.replace(/é([bcdfgjklmnpqrstvwxz])$/, "è$1");
+  else ps = s;
+  var ons = ger ? s+"e" : (cer ? s.slice(0,-1)+"ç" : s);
+  var pp = s + "é";
+  var ppres = ons + "ant";
+  var imp = [
+    preAO()+"ais", preAO()+"ais", preAO()+"ait",
+    s+"ions", s+"iez", preAO()+"aient"
+  ];
+  var psAI = [
+    preAO()+"ai", preAO()+"as", preAO()+"a",
+    preAO()+"âmes", preAO()+"âtes", preAO()+"èrent"
+  ];
+  var futStem = inf;
+  if(isYer(inf)) futStem = s.slice(0,-1)+"i"+"er";
+  else if(isDouble(inf)) futStem = s + s.slice(-1) + "er";
+  var fut = [futStem+"ai", futStem+"as", futStem+"a", futStem+"ons", futStem+"ez", futStem+"ont"];
+  var cond = [futStem+"ais", futStem+"ais", futStem+"ait", futStem+"ions", futStem+"iez", futStem+"aient"];
+  var subjPres = [ps+"e", ps+"es", ps+"e", s+"ions", s+"iez", ps+"ent"];
+  var pre = preAO();
+  var subjImp = [pre+"asse", pre+"asses", pre+"ât", pre+"assions", pre+"assiez", pre+"assent"];
+  function compose(auxTemps){
+    return AVOIR[auxTemps].map(function(a){ return a==null ? null : a + " " + pp; });
+  }
+  return {
+    "indicatif": {
+      "présent": [ps+"e", ps+"es", ps+"e", ons+"ons", s+"ez", ps+"ent"],
+      "imparfait": imp,
+      "passé simple": psAI,
+      "futur simple": fut,
+      "passé composé": compose("présent"),
+      "plus-que-parfait": compose("imparfait"),
+      "passé antérieur": compose("passé simple"),
+      "futur antérieur": compose("futur simple")
+    },
+    "conditionnel": {
+      "présent": cond,
+      "passé": compose("conditionnel")
+    },
+    "subjonctif": {
+      "présent": subjPres,
+      "imparfait": subjImp,
+      "passé": compose("subj présent"),
+      "plus-que-parfait": compose("subj imparfait")
+    },
+    "impératif": {
+      "présent": [null, ps+"e", null, ons+"ons", s+"ez", null],
+      "passé": [null, AVOIR["impératif"][1]+" "+pp, null, AVOIR["impératif"][3]+" "+pp, AVOIR["impératif"][4]+" "+pp, null]
+    },
+    "participe": { "présent": ppres, "passé": pp },
+    "infinitif": { "présent": inf, "passé": "avoir " + pp },
+    "gérondif": { "présent": "en " + ppres, "passé": "en ayant " + pp }
+  };
+}
+
+var VERBES = ["aimer","parler","donner","manger","commencer","employer","appeler","jeter",
+              "préférer","regarder","chanter","danser","porter","travailler","écouter",
+              "arriver","trouver","penser","crier","sauter"];
+var PERSONNES = ["1re personne du singulier (je)","2e personne du singulier (tu)",
+                 "3e personne du singulier (il/elle)","1re personne du pluriel (nous)",
+                 "2e personne du pluriel (vous)","3e personne du pluriel (ils/elles)"];
+var PRONOMS = ["je","tu","il","elle","on","nous","vous","ils","elles"];
+
+function forme(verbe, mode, temps, p){
+  var f = conj(verbe)[mode][temps];
+  return Array.isArray(f) ? f[p] : f;
+}
+function labelTemps(mode, temps){
+  if(mode==="indicatif") return temps + " de l'indicatif";
+  if(mode==="subjonctif") return temps + " du subjonctif";
+  if(mode==="conditionnel") return "conditionnel " + temps;
+  if(mode==="impératif") return "impératif " + temps;
+  return temps;
+}
+function labelModeTemps(mode, temps){
+  var m = mode.charAt(0).toUpperCase() + mode.slice(1);
+  var t = temps.charAt(0).toUpperCase() + temps.slice(1);
+  return m + ", " + t;
+}
+function normaliser(s){
+  if(s == null) s = "";
+  s = String(s).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+  s = s.replace(/['’ʼ`]/g, "");
+  s = s.replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
+  var t = s.split(" ");
+  while(t.length && (t[0]==="que" || t[0]==="qu" || PRONOMS.indexOf(t[0])>=0 || (t[0].indexOf("qu")===0 && t[0].length<=6))) t.shift();
+  return t.join(" ");
+}
+function alea(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function melanger(arr){
+  var a = arr.slice();
+  for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var tmp=a[i]; a[i]=a[j]; a[j]=tmp; }
+  return a;
+}
+function cle(m,t){ return m+"|"+t; }
+/* ================= Banque de questions de RECONNAISSANCE (textes littéraires, XVIIIe-XXe siècle) ================= */
+
+var RECOG = [
+ {texte:"À peine les janissaires eurent-ils fait le repas que nous leur avions fourni, que les Russes arrivent sur des bateaux plats.",
+  cible:"eurent", auteur:"Voltaire", oeuvre:"Candide", detail:"chapitre 3 (1759)",
+  options:["Indicatif, passé antérieur","Indicatif, passé simple","Subjonctif, imparfait","Subjonctif, plus-que-parfait"], bonne:0,
+  cles:["indicatif|passé antérieur"],
+  explication:"« eurent » : auxiliaire avoir au passé simple + participe passé « fait » = passé antérieur de l'indicatif."},
+ {texte:"…d'autres, à demi brûlées, criaient qu'on achevât de leur donner la mort.",
+  cible:"achevât", auteur:"Voltaire", oeuvre:"Candide", detail:"chapitre 3 (1759)",
+  options:["Subjonctif, imparfait","Indicatif, passé simple","Subjonctif, présent","Subjonctif, plus-que-parfait"], bonne:0,
+  cles:["subjonctif|imparfait"],
+  explication:"Après « criaient que » (principale au passé), la concordance des temps donne l'imparfait du subjonctif « qu'on achevât ». L'accent circonflexe du « â » caractérise la 3e personne du singulier."},
+ {texte:"Il a fallu que je fusse chassé d'auprès de mademoiselle Cunégonde, que j'aie passé par les baguettes…",
+  cible:"fusse", auteur:"Voltaire", oeuvre:"Candide", detail:"chapitre 3 (1759)",
+  options:["Subjonctif, plus-que-parfait","Subjonctif, imparfait","Subjonctif, passé","Conditionnel, passé"], bonne:0,
+  cles:["subjonctif|plus-que-parfait"],
+  explication:"« que je fusse » : auxiliaire être au subjonctif imparfait + participe passé = plus-que-parfait du subjonctif."},
+ {texte:"…que j'aie passé par les baguettes, et il faut que je demande mon pain, jusqu'à ce que je puisse en gagner.",
+  cible:"aie", auteur:"Voltaire", oeuvre:"Candide", detail:"chapitre 3 (1759)",
+  options:["Subjonctif, passé","Subjonctif, présent","Subjonctif, imparfait","Indicatif, passé composé"], bonne:0,
+  cles:["subjonctif|passé"],
+  explication:"« que j'aie passé » : auxiliaire « aie » (subjonctif présent) + participe passé = subjonctif passé."},
+ {texte:"…il faut que je demande mon pain, jusqu'à ce que je puisse en gagner.",
+  cible:"demande", auteur:"Voltaire", oeuvre:"Candide", detail:"chapitre 3 (1759)",
+  options:["Subjonctif, présent","Indicatif, présent","Subjonctif, imparfait","Impératif, présent"], bonne:0,
+  cles:["subjonctif|présent"],
+  explication:"Après « il faut que », le verbe se met au subjonctif présent."},
+ {texte:"Cela est bien dit, répondit Candide, mais il faut cultiver notre jardin.",
+  cible:"répondit", auteur:"Voltaire", oeuvre:"Candide", detail:"chapitre 30 (1759)",
+  options:["Indicatif, passé simple","Indicatif, imparfait","Indicatif, passé composé","Subjonctif, imparfait"], bonne:0,
+  cles:["indicatif|passé simple"],
+  explication:"Verbe introducteur de parole au passé simple de l'indicatif."},
+ {texte:"Cela est bien dit, répondit Candide, mais il faut cultiver notre jardin.",
+  cible:"cultiver", auteur:"Voltaire", oeuvre:"Candide", detail:"chapitre 30 (1759)",
+  options:["Infinitif, présent","Impératif, présent","Participe, présent","Gérondif, présent"], bonne:0,
+  cles:["infinitif|présent"],
+  explication:"Après « il faut », le verbe reste à l'infinitif présent."},
+ {texte:"Si c'eût été l'œil droit, je l'aurais guéri.",
+  cible:"c'eût", auteur:"Voltaire", oeuvre:"Zadig", detail:"(1747)",
+  options:["Subjonctif, imparfait","Indicatif, passé antérieur","Subjonctif, plus-que-parfait","Conditionnel, passé"], bonne:0,
+  cles:["subjonctif|imparfait"],
+  explication:"Hypothèse au passé : « c'eût été » = imparfait du subjonctif de être (3e pers. sing., accent circonflexe)."},
+ {texte:"Si c'eût été l'œil droit, je l'aurais guéri.",
+  cible:"aurais", auteur:"Voltaire", oeuvre:"Zadig", detail:"(1747)",
+  options:["Conditionnel, passé","Conditionnel, présent","Indicatif, futur antérieur","Subjonctif, plus-que-parfait"], bonne:0,
+  cles:["conditionnel|passé"],
+  explication:"« je l'aurais guéri » : auxiliaire au conditionnel présent + participe passé = conditionnel passé."},
+ {texte:"Je vous eusse donné la mienne, si l'on m'eût laissé la liberté.",
+  cible:"eusse", auteur:"Voltaire", oeuvre:"Zadig", detail:"(1747)",
+  options:["Subjonctif, plus-que-parfait","Subjonctif, imparfait","Conditionnel, passé","Indicatif, passé antérieur"], bonne:0,
+  cles:["subjonctif|plus-que-parfait"],
+  explication:"« que je vous eusse donné » : auxiliaire avoir au subjonctif imparfait + participe passé = plus-que-parfait du subjonctif."},
+ {texte:"Je reviendrai sûrement te raconter ce qui se sera passé.",
+  cible:"sera", auteur:"Choderlos de Laclos", oeuvre:"Les Liaisons dangereuses", detail:"lettre I (1782)",
+  options:["Indicatif, futur antérieur","Indicatif, futur simple","Conditionnel, passé","Indicatif, passé composé"], bonne:0,
+  cles:["indicatif|futur antérieur"],
+  explication:"« ce qui se sera passé » : auxiliaire au futur simple + participe passé = futur antérieur de l'indicatif."},
+ {texte:"Je reviendrai sûrement te raconter ce qui se sera passé.",
+  cible:"reviendrai", auteur:"Choderlos de Laclos", oeuvre:"Les Liaisons dangereuses", detail:"lettre I (1782)",
+  options:["Indicatif, futur simple","Indicatif, futur antérieur","Conditionnel, présent","Indicatif, présent"], bonne:0,
+  cles:["indicatif|futur simple"],
+  explication:"« je reviendrai » : futur simple de l'indicatif."},
+ {texte:"Si vous eussiez été là, je ne sais où m'aurait menée cette gaieté.",
+  cible:"eussiez", auteur:"Choderlos de Laclos", oeuvre:"Les Liaisons dangereuses", detail:"lettre XX (1782)",
+  options:["Subjonctif, plus-que-parfait","Subjonctif, imparfait","Subjonctif, passé","Conditionnel, passé"], bonne:0,
+  cles:["subjonctif|plus-que-parfait"],
+  explication:"« si vous eussiez été » : plus-que-parfait du subjonctif (auxiliaire être au subjonctif imparfait + participe passé)."},
+ {texte:"Si vous eussiez été là, je ne sais où m'aurait menée cette gaieté.",
+  cible:"aurait", auteur:"Choderlos de Laclos", oeuvre:"Les Liaisons dangereuses", detail:"lettre XX (1782)",
+  options:["Conditionnel, passé","Conditionnel, présent","Indicatif, plus-que-parfait","Subjonctif, plus-que-parfait"], bonne:0,
+  cles:["conditionnel|passé"],
+  explication:"« m'aurait menée » : conditionnel passé (auxiliaire au conditionnel présent + participe passé accordé avec le COD « m' »)."},
+ {texte:"J'aurais pu en choisir un plus commode…",
+  cible:"aurais", auteur:"Choderlos de Laclos", oeuvre:"Les Liaisons dangereuses", detail:"lettre CXXV (1782)",
+  options:["Conditionnel, passé","Conditionnel, présent","Indicatif, passé composé","Indicatif, futur antérieur"], bonne:0,
+  cles:["conditionnel|passé"],
+  explication:"« J'aurais pu » : conditionnel passé."},
+ {texte:"…où auriez-vous pris l'idée de l'âme d'un libertin ?",
+  cible:"auriez", auteur:"Choderlos de Laclos", oeuvre:"Les Liaisons dangereuses", detail:"(1782)",
+  options:["Conditionnel, présent","Indicatif, futur simple","Conditionnel, passé","Indicatif, imparfait"], bonne:0,
+  cles:["conditionnel|présent"],
+  explication:"« où auriez-vous pris » : conditionnel présent (interrogation)."},
+ {texte:"Elle aurait voulu que ce nom de Bovary, qui était le sien, fut illustre…",
+  cible:"fut", auteur:"Flaubert", oeuvre:"Madame Bovary", detail:"(1856)",
+  options:["Subjonctif, imparfait","Indicatif, passé simple","Subjonctif, passé","Subjonctif, plus-que-parfait"], bonne:0,
+  cles:["subjonctif|imparfait"],
+  explication:"Après « aurait voulu que » (principale au conditionnel passé), la subordonnée se met à l'imparfait du subjonctif : « fut » (3e pers. sing. de être, accent circonflexe)."},
+ {texte:"Elle aurait voulu que ce nom de Bovary, qui était le sien, fut illustre…",
+  cible:"aurait", auteur:"Flaubert", oeuvre:"Madame Bovary", detail:"(1856)",
+  options:["Conditionnel, passé","Conditionnel, présent","Indicatif, plus-que-parfait","Indicatif, passé composé"], bonne:0,
+  cles:["conditionnel|passé"],
+  explication:"« elle aurait voulu » : conditionnel passé."},
+ {texte:"…que le gamin eût fait sa première communion.",
+  cible:"eût", auteur:"Flaubert", oeuvre:"Madame Bovary", detail:"(1856)",
+  options:["Subjonctif, plus-que-parfait","Subjonctif, imparfait","Indicatif, passé antérieur","Conditionnel, passé"], bonne:0,
+  cles:["subjonctif|plus-que-parfait"],
+  explication:"« que le gamin eût fait » : plus-que-parfait du subjonctif (avoir au subjonctif imparfait + participe). Ne pas confondre avec « il eut » du passé antérieur."},
+ {texte:"Longtemps, je me suis couché de bonne heure.",
+  cible:"suis", auteur:"Proust", oeuvre:"Du côté de chez Swann (À la recherche du temps perdu)", detail:"(1913)",
+  options:["Indicatif, imparfait","Indicatif, présent","Indicatif, passé composé","Indicatif, plus-que-parfait"], bonne:0,
+  cles:["indicatif|imparfait"],
+  explication:"« je me suis couché » : imparfait de l'indicatif (verbe pronominal)."},
+ {texte:"…à ce qu'ils n'eussent pas l'air de figurer d'une façon exceptionnelle…",
+  cible:"eussent", auteur:"Proust", oeuvre:"Du côté de chez Swann (À la recherche du temps perdu)", detail:"(1913)",
+  options:["Subjonctif, plus-que-parfait","Subjonctif, imparfait","Subjonctif, passé","Conditionnel, passé"], bonne:0,
+  cles:["subjonctif|plus-que-parfait"],
+  explication:"« qu'ils n'eussent pas l'air » : plus-que-parfait du subjonctif (avoir au subjonctif imparfait, 3e pers. plur. « eussent », + participe)."},
+ {texte:"…jusqu'à sa chambre écrire à Honoré qu'il vînt la voir.",
+  cible:"vînt", auteur:"Proust", oeuvre:"Les Plaisirs et les Jours", detail:"(1896)",
+  options:["Subjonctif, imparfait","Indicatif, passé simple","Subjonctif, présent","Subjonctif, plus-que-parfait"], bonne:0,
+  cles:["subjonctif|imparfait"],
+  explication:"« qu'il vînt » : imparfait du subjonctif de venir (3e pers. sing., accent circonflexe sur le î)."},
+ {texte:"Aujourd'hui, maman est morte.",
+  cible:"est", auteur:"Camus", oeuvre:"L'Étranger", detail:"(1942)",
+  options:["Indicatif, passé simple","Indicatif, présent","Indicatif, imparfait","Indicatif, passé composé"], bonne:0,
+  cles:["indicatif|passé simple"],
+  explication:"Incipit célèbre : « est morte » est au passé simple de l'indicatif."},
+ {texte:"Demain, dès l'aube, à l'heure où blanchit la campagne, je partirai.",
+  cible:"blanchit", auteur:"Victor Hugo", oeuvre:"Les Contemplations, « Demain, dès l'aube »", detail:"(1856)",
+  options:["Indicatif, présent","Indicatif, futur simple","Indicatif, imparfait","Subjonctif, présent"], bonne:0,
+  cles:["indicatif|présent"],
+  explication:"« où blanchit la campagne » : présent de l'indicatif dans la subordonnée de temps."},
+ {texte:"Demain, dès l'aube, à l'heure où blanchit la campagne, je partirai.",
+  cible:"partirai", auteur:"Victor Hugo", oeuvre:"Les Contemplations, « Demain, dès l'aube »", detail:"(1856)",
+  options:["Indicatif, futur simple","Indicatif, futur antérieur","Conditionnel, présent","Indicatif, présent"], bonne:0,
+  cles:["indicatif|futur simple"],
+  explication:"« je partirai » : futur simple de l'indicatif."}
+];
+
+RECOG.push(
+ {texte:"…aussitôt qu'il eut entendu prononcer ces deux noms…",
+  cible:"eut", auteur:"Dumas", oeuvre:"Vingt ans après", detail:"(1845)",
+  options:["Indicatif, passé antérieur","Subjonctif, imparfait","Indicatif, passé simple","Subjonctif, plus-que-parfait"], bonne:0,
+  cles:["indicatif|passé antérieur"],
+  explication:"« il eut entendu » : passé antérieur (auxiliaire au passé simple + participe). À distinguer de « il eût » (subjonctif imparfait)."},
+ {texte:"Quand la caissière lui eut rendu la monnaie…",
+  cible:"eut", auteur:"Maupassant", oeuvre:"Bel-Ami", detail:"incipit, chapitre 1 (1885)",
+  options:["Indicatif, passé antérieur","Indicatif, passé simple","Subjonctif, imparfait","Indicatif, plus-que-parfait"], bonne:0,
+  cles:["indicatif|passé antérieur"],
+  explication:"« lui eut rendu » : passé antérieur de l'indicatif, fréquent en tête de phrase après « quand »."},
+ {texte:"…dont j'avais fait la rencontre à Passy.",
+  cible:"avais", auteur:"Prévost", oeuvre:"Manon Lescaut", detail:"(1731)",
+  options:["Indicatif, plus-que-parfait","Indicatif, imparfait","Indicatif, passé composé","Conditionnel, passé"], bonne:0,
+  cles:["indicatif|plus-que-parfait"],
+  explication:"« j'avais fait » : plus-que-parfait de l'indicatif (imparfait de l'auxiliaire + participe passé)."},
+ {texte:"…lorsqu'il m'eut remis à son tour.",
+  cible:"eut", auteur:"Prévost", oeuvre:"Manon Lescaut", detail:"(1731)",
+  options:["Indicatif, passé antérieur","Indicatif, passé simple","Subjonctif, imparfait","Subjonctif, plus-que-parfait"], bonne:0,
+  cles:["indicatif|passé antérieur"],
+  explication:"« il m'eut remis » : passé antérieur de l'indicatif."},
+ {texte:"Il avait plu le matin, le temps était très doux…",
+  cible:"avait", auteur:"Zola", oeuvre:"L'Assommoir", detail:"(1877)",
+  options:["Indicatif, plus-que-parfait","Indicatif, imparfait","Indicatif, passé composé","Conditionnel, présent"], bonne:0,
+  cles:["indicatif|plus-que-parfait"],
+  explication:"« il avait plu » : plus-que-parfait de l'indicatif."},
+ {texte:"…elle eut tout d'un coup l'idée d'aller voir Goujet à sa forge.",
+  cible:"eut", auteur:"Zola", oeuvre:"L'Assommoir", detail:"(1877)",
+  options:["Indicatif, passé antérieur","Indicatif, passé simple","Subjonctif, imparfait","Indicatif, plus-que-parfait"], bonne:0,
+  cles:["indicatif|passé antérieur"],
+  explication:"« elle eut l'idée » : passé antérieur (passé simple de avoir « eut » + participe passé « eu »… ici le verbe est « avoir » lui-même)."},
+ {texte:"Elle aurait volontiers mangé quelque chose de bon.",
+  cible:"aurait", auteur:"Zola", oeuvre:"L'Assommoir", detail:"(1877)",
+  options:["Conditionnel, passé","Conditionnel, présent","Indicatif, plus-que-parfait","Indicatif, futur antérieur"], bonne:0,
+  cles:["conditionnel|passé"],
+  explication:"« elle aurait mangé » : conditionnel passé."},
+ {texte:"…il ne pouvait attendre pour sortir que le travail fût achevé.",
+  cible:"fût", auteur:"Rousseau", oeuvre:"Les Confessions", detail:"livre VII (1782)",
+  options:["Subjonctif, imparfait","Indicatif, passé simple","Subjonctif, plus-que-parfait","Conditionnel, passé"], bonne:0,
+  cles:["subjonctif|imparfait"],
+  explication:"« que le travail fût achevé » : imparfait du subjonctif de être (3e pers. sing., accent circonflexe) + participe passé."},
+ {texte:"Quand elle eut de mes os sucée toute la moelle…",
+  cible:"eut", auteur:"Baudelaire", oeuvre:"Les Fleurs du mal, « Le Vampire »", detail:"(1857)",
+  options:["Indicatif, passé antérieur","Indicatif, passé simple","Subjonctif, imparfait","Subjonctif, plus-que-parfait"], bonne:0,
+  cles:["indicatif|passé antérieur"],
+  explication:"« elle eut sucée » : passé antérieur de l'indicatif (passé simple de avoir + participe passé)."}
+);
+
+/* ================= Questions de grammaire/conjugaison reprises du QCM ================= */
+
+var GRAMMAIRE = [
+ {type:"qcm", cat:"conjugaison",
+  question:"Parmi ces formes verbales, laquelle n'existe pas ?",
+  options:["Viendrerai","sûmes","finerions","chantâtes"], bonne:0,
+  source:"QCM « Identification temps et modes verbaux 2nde »",
+  explication:"« Viendrerai » n'existe pas (futur de venir : « je viendrai »). « sûmes » (passé simple de savoir), « finerions » (conditionnel de finer) et « chantâtes » (passé simple de chanter) existent."},
+ {type:"qcm", cat:"conjugaison",
+  question:"La forme « chantâtes » est…",
+  options:["la 2e personne du pluriel du passé simple de l'indicatif","la 2e personne du pluriel de l'imparfait du subjonctif","la 3e personne du singulier de l'imparfait du subjonctif","la 1re personne du singulier du subjonctif imparfait"], bonne:0,
+  source:"QCM « Identification temps et modes verbaux 2nde »",
+  explication:"« chantâtes » : terminaison -âtes du passé simple (vous chantâtes). L'imparfait du subjonctif comporterait -ss- : « que vous chantassiez »."},
+ {type:"qcm", cat:"conjugaison",
+  question:"Lorsqu'on conjugue un verbe à un temps composé…",
+  options:["le verbe se compose d'un auxiliaire conjugué à un temps simple et d'un participe passé","l'auxiliaire se conjugue à un temps composé","le participe passé ne s'accorde jamais"], bonne:0,
+  source:"QCM « Identification temps et modes verbaux 2nde »",
+  explication:"Un temps composé = auxiliaire (avoir ou être) conjugué à un temps simple + participe passé du verbe."},
+ {type:"qcm", cat:"conjugaison",
+  question:"Parmi les modes suivants, lesquels sont des modes personnels (ils varient en personne) ?",
+  options:["l'indicatif, le subjonctif, l'impératif et le conditionnel","l'infinitif et le participe","le gérondif et l'infinitif","uniquement l'indicatif"], bonne:0,
+  source:"QCM « Identification temps et modes verbaux 2nde »",
+  explication:"Modes personnels : indicatif, subjonctif, impératif, conditionnel. Modes impersonnels : infinitif, participe, gérondif."}
+];
+
+/* ================= Génération des questions de conjugaison ================= */
+
+var TPS_RARES = [
+  ["indicatif","passé antérieur"],["indicatif","futur antérieur"],["indicatif","plus-que-parfait"],
+  ["conditionnel","présent"],["conditionnel","passé"],["indicatif","futur simple"],
+  ["subjonctif","imparfait"],["subjonctif","plus-que-parfait"]
+];
+var TPS_TOUS = [
+  ["indicatif","présent"],["indicatif","imparfait"],["indicatif","passé simple"],
+  ["indicatif","passé composé"],["indicatif","futur simple"],["indicatif","futur antérieur"],
+  ["indicatif","plus-que-parfait"],["indicatif","passé antérieur"],
+  ["conditionnel","présent"],["conditionnel","passé"],
+  ["subjonctif","présent"],["subjonctif","imparfait"],["subjonctif","passé"],["subjonctif","plus-que-parfait"],
+  ["impératif","présent"],["participe","présent"],["participe","passé"],
+  ["infinitif","présent"],["gérondif","présent"]
+];
+
+function verbeAleatoire(){ return alea(VERBES); }
+
+function questionConj(verbe, mode, temps, p){
+  var attendu = forme(verbe, mode, temps, p);
+  return {
+    type:"texte", cat:"conjugaison", verbe:verbe, mode:mode, temps:temps, p:p,
+    question:"Conjugue le verbe « " + verbe + " » à la " + PERSONNES[p] + ", au " + labelTemps(mode,temps) + ".",
+    attendu:attendu,
+    cles:[cle(mode,temps)],
+    explication:"« " + attendu + " » — " + labelModeTemps(mode,temps) + " de « " + verbe + " » (" + PERSONNES[p] + ")."
+  };
+}
+
+var LIGNES_TABLEAU = [
+  ["indicatif","présent"],["indicatif","imparfait"],["indicatif","passé simple"],
+  ["indicatif","passé composé"],["indicatif","futur simple"],["indicatif","futur antérieur"],
+  ["indicatif","plus-que-parfait"],["indicatif","passé antérieur"],
+  ["conditionnel","présent"],["conditionnel","passé"],
+  ["subjonctif","présent"],["subjonctif","imparfait"],["subjonctif","passé"],["subjonctif","plus-que-parfait"],
+  ["impératif","présent"],["impératif","passé"],
+  ["participe","présent"],["participe","passé"],
+  ["infinitif","présent"],["gérondif","présent"]
+];
+var LIGNES_RARES = ["indicatif|futur antérieur","indicatif|plus-que-parfait","indicatif|passé antérieur",
+  "conditionnel|présent","conditionnel|passé","subjonctif|imparfait","subjonctif|plus-que-parfait"];
+
+function questionTableau(verbe){
+  var rares = melanger(LIGNES_RARES).slice(0,3).map(function(k){ return k.split("|"); });
+  var autres = melanger(LIGNES_TABLEAU.filter(function(l){ return LIGNES_RARES.indexOf(cle(l[0],l[1]))<0; })).slice(0,5);
+  var lignes = melanger(rares.concat(autres));
+  return { type:"tableau", cat:"conjugaison", verbe:verbe, lignes:lignes,
+    question:"Complète le tableau de conjugaison du verbe « " + verbe + " » (comme dans le test « Morphologie des temps » : 1re personne du singulier et 1re personne du pluriel). 1 point par case correcte." };
+}
+
+/* ================= Session de 20 questions : 2/3 reconnaissance, 1/3 conjugaison ================= */
+
+var TAILLE_SESSION = 20, N_RECOG = 13, N_CONJ = 7;
+
+function construireSession(){
+  var recog = melanger(RECOG).slice(0, N_RECOG);
+  recog.forEach(function(q){ q.cat = "reconnaissance"; });
+  var couvertes = {};
+  recog.forEach(function(q){ (q.cles||[]).forEach(function(k){ couvertes[k]=true; }); });
+
+  var conj = melanger(GRAMMAIRE).slice(0,2);
+  var manquantes = TPS_RARES.filter(function(t){ return !couvertes[cle(t[0],t[1])]; });
+  var autres = TPS_TOUS.filter(function(t){
+    return TPS_RARES.every(function(r){ return cle(r[0],r[1])!==cle(t[0],t[1]); });
+  });
+  var cibles = melanger(manquantes).concat(melanger(autres));
+  for(var i=0;i<3;i++){
+    var t = cibles[i % cibles.length];
+    var mode = t[0], temps = t[1], p;
+    if(mode==="impératif") p = alea([1,3,4]);
+    else if(mode==="participe"||mode==="infinitif"||mode==="gérondif") p = 0;
+    else p = Math.floor(Math.random()*6);
+    conj.push(questionConj(verbeAleatoire(), mode, temps, p));
+  }
+  conj.push(questionTableau(verbeAleatoire()));
+  conj.push(questionTableau(verbeAleatoire()));
+
+  return melanger(recog.concat(conj)).slice(0, TAILLE_SESSION);
+}
+
+/* ================= Moteur d'affichage ================= */
+
+var session = [], index = 0, score = 0, reussies = 0, reponses = [];
+
+function $(id){ return document.getElementById(id); }
+function majHUD(){
+  $("score").textContent = score;
+  $("prog").textContent = session.length ? ("Question " + Math.min(index+1, session.length) + " / " + session.length) : "";
+  $("barre").style.width = session.length ? (100*index/session.length) + "%" : "0";
+}
+function recordAffiche(){
+  var best = localStorage.getItem("conj1er_best");
+  $("record").textContent = best ? "Meilleur score : " + best + " points." : "";
+}
+function highlight(texte, cible){
+  var i = texte.indexOf(cible);
+  if(i<0) return texte;
+  return texte.slice(0,i) + "<mark>" + texte.slice(i,i+cible.length) + "</mark>" + texte.slice(i+cible.length);
+}
+
+function afficherQuestion(){
+  majHUD();
+  var q = session[index];
+  $("etiquette").textContent = q.cat === "reconnaissance" ? "Reconnaissance" : "Conjugaison";
+  $("etiquette").className = "etiquette" + (q.cat==="conjugaison" ? " conj" : "");
+  $("btn-suivant").classList.add("cache");
+  $("feedback").className = "feedback";
+  $("feedback").innerHTML = "";
+  var z = $("zone-question");
+  var html = "";
+  if(q.type === "qcm" && q.texte){
+    html += '<blockquote class="extrait">« ' + highlight(q.texte, q.cible) + ' »</blockquote>';
+    html += '<p class="source">— ' + q.auteur + ', <i>' + q.oeuvre + '</i>, ' + q.detail + '</p>';
+    html += '<p class="consigne">Quel est le mode et le temps de la forme verbale soulignée <b>« ' + q.cible + ' »</b> ?</p>';
+    html += '<div class="options">';
+    q.options.forEach(function(op,i){
+      html += '<button class="option" data-i="' + i + '"><span class="cle">' + "ABCD"[i] + '</span>' + op + '</button>';
+    });
+    html += '</div>';
+    z.innerHTML = html;
+    Array.prototype.forEach.call(z.querySelectorAll(".option"), function(b){
+      b.addEventListener("click", function(){ repondreQCM(q, parseInt(b.getAttribute("data-i"),10), b); });
+    });
+  } else if(q.type === "qcm"){
+    html += '<p class="consigne">' + q.question + '</p>';
+    if(q.source) html += '<p class="source">' + q.source + '</p>';
+    html += '<div class="options">';
+    q.options.forEach(function(op,i){
+      html += '<button class="option" data-i="' + i + '"><span class="cle">' + "ABCD"[i] + '</span>' + op + '</button>';
+    });
+    html += '</div>';
+    z.innerHTML = html;
+    Array.prototype.forEach.call(z.querySelectorAll(".option"), function(b){
+      b.addEventListener("click", function(){ repondreQCM(q, parseInt(b.getAttribute("data-i"),10), b); });
+    });
+  } else if(q.type === "texte"){
+    html += '<p class="consigne">' + q.question + '</p>';
+    html += '<input class="reponse" id="rep" type="text" autocomplete="off" placeholder="Ta réponse…">';
+    html += '<p class="indice">Écris seulement la forme verbale (le pronom sujet est facultatif).</p>';
+    html += '<button class="btn secondaire" id="btn-valider">Valider</button>';
+    z.innerHTML = html;
+    var input = $("rep");
+    input.focus();
+    function valider(){ repondreTexte(q, input.value); }
+    $("btn-valider").addEventListener("click", valider);
+    input.addEventListener("keydown", function(e){ if(e.key==="Enter") valider(); });
+  } else if(q.type === "tableau"){
+    html += '<p class="consigne">' + q.question + '</p>';
+    html += '<table class="tabconj"><thead><tr><th>Mode — temps</th><th>je</th><th>nous</th></tr></thead><tbody>';
+    q.lignes.forEach(function(l, i){
+      var mode = l[0], temps = l[1];
+      var impersonnel = (mode==="participe"||mode==="infinitif"||mode==="gérondif");
+      var imperatif = (mode==="impératif");
+      html += '<tr><td class="mode">' + mode.charAt(0).toUpperCase()+mode.slice(1) + ' — ' + temps + '</td>';
+      if(impersonnel){
+        html += '<td colspan="2"><input data-i="' + i + '" data-p="0" placeholder="…"></td>';
+      } else if(imperatif){
+        html += '<td>—</td><td><input data-i="' + i + '" data-p="3" placeholder="…"></td>';
+      } else {
+        html += '<td><input data-i="' + i + '" data-p="0" placeholder="…"></td>';
+        html += '<td><input data-i="' + i + '" data-p="3" placeholder="…"></td>';
+      }
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+    html += '<button class="btn secondaire" id="btn-valider">Valider le tableau</button>';
+    z.innerHTML = html;
+    $("btn-valider").addEventListener("click", function(){ repondreTableau(q); });
+  }
+}
+
+function feedback(html, ok){
+  var f = $("feedback");
+  f.className = "feedback " + (ok ? "bon" : "faux");
+  f.innerHTML = html;
+}
+
+function repondreQCM(q, choix, bouton){
+  Array.prototype.forEach.call($("zone-question").querySelectorAll(".option"), function(b){ b.disabled = true; });
+  var ok = choix === q.bonne;
+  Array.prototype.forEach.call($("zone-question").querySelectorAll(".option"), function(b){
+    if(parseInt(b.getAttribute("data-i"),10) === q.bonne) b.classList.add("bonne");
+  });
+  if(!ok && bouton) bouton.classList.add("fausse");
+  var pts = ok ? 1 : 0;
+  score += pts;
+  if(ok) reussies++;
+  reponses.push({q:q, ok:ok, reponse:q.options[choix], bonne:q.options[q.bonne], pts:pts});
+  var html = (ok ? '<span class="points plus">✔ Bonne réponse ! +1 point</span>'
+                 : '<span class="points">✘ Mauvaise réponse. Bonne réponse : <b>' + q.options[q.bonne] + '</b> — 0 point</span>');
+  html += '<div class="explication">' + q.explication + '</div>';
+  if(q.texte) html += '<div class="explication">Source : ' + q.auteur + ', <i>' + q.oeuvre + '</i>, ' + q.detail + '.</div>';
+  if(q.source) html += '<div class="explication">' + q.source + '</div>';
+  feedback(html, ok);
+  $("btn-suivant").classList.remove("cache");
+  majHUD();
+}
+
+function repondreTexte(q, val){
+  if($("btn-valider").disabled) return;
+  $("btn-valider").disabled = true;
+  $("rep").disabled = true;
+  var ok = normaliser(val) === normaliser(q.attendu);
+  var pts = ok ? 1 : 0;
+  score += pts;
+  if(ok) reussies++;
+  reponses.push({q:q, ok:ok, reponse:val || "(vide)", bonne:q.attendu, pts:pts});
+  var html = (ok ? '<span class="points plus">✔ Bonne réponse ! +1 point</span>'
+                 : '<span class="points">✘ Mauvaise réponse. Bonne réponse : <b>' + q.attendu + '</b> — 0 point</span>');
+  html += '<div class="explication">' + q.explication + '</div>';
+  feedback(html, ok);
+  $("btn-suivant").classList.remove("cache");
+  majHUD();
+}
+
+function repondreTableau(q){
+  if($("btn-valider").disabled) return;
+  $("btn-valider").disabled = true;
+  var inputs = $("zone-question").querySelectorAll("input");
+  var nbOK = 0, nbTotal = 0;
+  Array.prototype.forEach.call(inputs, function(inp){
+    var i = parseInt(inp.getAttribute("data-i"),10);
+    var p = parseInt(inp.getAttribute("data-p"),10);
+    var l = q.lignes[i];
+    var attendu = forme(q.verbe, l[0], l[1], p);
+    nbTotal++;
+    var ok = normaliser(inp.value) === normaliser(attendu);
+    if(ok){ nbOK++; inp.classList.add("bonne"); } else { inp.classList.add("fausse"); }
+    inp.disabled = true;
+    inp.title = "Bonne réponse : " + attendu;
+  });
+  var pts = nbOK;
+  score += pts;
+  if(nbOK === nbTotal) reussies++;
+  reponses.push({q:q, ok:(nbOK===nbTotal), reponse:nbOK + "/" + nbTotal + " cases justes", bonne:"tableau complet", pts:pts});
+  var html = (nbOK===nbTotal
+    ? '<span class="points plus">✔ Tableau complet ! +' + pts + ' points</span>'
+    : '<span class="points">' + nbOK + ' / ' + nbTotal + ' cases justes — +' + pts + ' point' + (pts>1?"s":"") + '</span> (les bonnes réponses s\'affichent au survol des cases rouges)');
+  html += '<div class="explication">Verbe « ' + q.verbe + ' » — lignes : ' + q.lignes.map(function(l){ return l[0] + " " + l[1]; }).join(", ") + '.</div>';
+  feedback(html, nbOK===nbTotal);
+  $("btn-suivant").classList.remove("cache");
+  majHUD();
+}
+
+function afficherFin(){
+  $("ecran-quiz").classList.add("cache");
+  $("ecran-fin").classList.remove("cache");
+  $("score-final").textContent = score;
+  $("reussies").textContent = "Questions entièrement réussies : " + reussies + " / " + session.length;
+  $("barre").style.width = "100%";
+  $("prog").textContent = "";
+  var best = parseInt(localStorage.getItem("conj1er_best") || "0", 10);
+  if(score > best){ localStorage.setItem("conj1er_best", String(score)); best = score; }
+  $("record2").textContent = "Meilleur score : " + best + " points.";
+  var ul = $("recap");
+  ul.innerHTML = "";
+  reponses.forEach(function(r){
+    var li = document.createElement("li");
+    var q = r.q;
+    var intitule = q.texte
+      ? ("« " + q.cible + " » — " + q.auteur + ", " + q.oeuvre)
+      : (q.question || ("Tableau : « " + q.verbe + " »"));
+    var type = q.cat === "reconnaissance" ? "Reconnaissance" : "Conjugaison";
+    li.innerHTML = '<span class="' + (r.ok ? "ok" : "ko") + '">' + (r.ok ? "✔" : "✘") + '</span> ' +
+      '<span class="q">[' + type + ']</span> ' + intitule + '<br>' +
+      'Ta réponse : <b>' + r.reponse + '</b> · Bonne réponse : <b>' + r.bonne + '</b> · <b>+' + r.pts + ' pt</b>';
+    ul.appendChild(li);
+  });
+  window.scrollTo(0,0);
+}
+
+function demarrer(){
+  session = construireSession();
+  index = 0; score = 0; reussies = 0; reponses = [];
+  $("ecran-accueil").classList.add("cache");
+  $("ecran-fin").classList.add("cache");
+  $("ecran-quiz").classList.remove("cache");
+  afficherQuestion();
+  window.scrollTo(0,0);
+}
+
+$("btn-start").addEventListener("click", demarrer);
+$("btn-rejouer").addEventListener("click", demarrer);
+$("btn-suivant").addEventListener("click", function(){
+  index++;
+  if(index >= session.length){ afficherFin(); } else { afficherQuestion(); window.scrollTo(0,0); }
+});
+recordAffiche();
+</script>
+</body>
+</html>
